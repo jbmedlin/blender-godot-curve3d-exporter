@@ -53,7 +53,7 @@ def ReadSingleCurve(obj):
 	final_output += '\n'
 	final_output += '[resource]\n'
 	final_output += '_data = {\n'
-	final_output += array_points + ',\n'
+	final_output += array_points + '\n'
 	final_output += tilt_points + '\n'
 	final_output += '}\n'
 	final_output += "point_count = " + str(count)
