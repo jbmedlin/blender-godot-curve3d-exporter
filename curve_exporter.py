@@ -25,7 +25,7 @@ def ReadSingleCurve(obj):
 
 	if spline.type != 'BEZIER':
 		return None
-
+	is_cyclic = spline.use_cyclic_u
 	array_points = '"points": PackedVector3Array('
 	tilt_points = '"tilts": PackedFloat32Array('
 	count = 0
@@ -52,6 +52,8 @@ def ReadSingleCurve(obj):
 	final_output += '[gd_resource type="Curve3D" format=3]\n'
 	final_output += '\n'
 	final_output += '[resource]\n'
+	if is_cyclic:
+		final_output += 'closed = true\n'
 	final_output += '_data = {\n'
 	final_output += array_points + '\n'
 	final_output += tilt_points + '\n'
