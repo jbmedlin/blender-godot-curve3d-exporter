@@ -77,10 +77,6 @@ def write_curve(context, filepath):
 	return {'FINISHED'}
 
 
-# ExportHelper is a helper class, defines filename and
-# invoke() function which calls the file selector.
-
-
 class ExportGodotCurve3D(Operator, ExportHelper):
 	"""This appears in the tooltip of the operator and in the generated docs"""
 	bl_idname = "export_godot.curve3d"	
@@ -120,17 +116,13 @@ class ExportGodotCurve3D(Operator, ExportHelper):
 def menu_func_export(self, context):
 		self.layout.operator(ExportGodotCurve3D.bl_idname, text="Export Curve3D (.tres)")
 
-
-# Register and add to the "file selector" menu (required to use F3 search "Text Export Operator" for quick access).
 def register():
 		bpy.utils.register_class(ExportGodotCurve3D)
 		bpy.types.TOPBAR_MT_file_export.append(menu_func_export)
 
-
 def unregister():
 		bpy.utils.unregister_class(ExportGodotCurve3D)
 		bpy.types.TOPBAR_MT_file_export.remove(menu_func_export)
-
 
 if __name__ == "__main__":
 		register()
