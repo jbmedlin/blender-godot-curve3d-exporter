@@ -18,7 +18,7 @@ bl_info = {
     "category": "Import-Export",
 }
 
-def ReadSingleCurve(obj):
+def ReadSingleCurve(obj, apply_transform=False):
 	if not obj.data.splines:
 		return None
 
@@ -27,9 +27,27 @@ def ReadSingleCurve(obj):
 	if spline.type != 'BEZIER':
 		return None
 	is_cyclic = spline.use_cyclic_u
+
+	if apply_transform:
+		temp_obj = obj.copy()
+		temp_obj.data = obj.data.copy()
+		bpy.context.collection.link(temp_obj)
+
+		temp_obj.select_set(True)
+		bpy.context.view_layer.objects.active = temp_obj
+		bpy.obs.object.transform_apply(location=True, rotation=True, scale=True)
+		temp_obj.select_set(False)
+
+		use_obj = temp_obj
+	else:
+		use_obj = obj
+
 	array_points = '"points": PackedVector3Array('
 	tilt_points = '"tilts": PackedFloat32Array('
 	count = 0
+
+	spline = use_obj.data.splines[0]
+
 	for point in spline.bezier_points:
 		if count != 0:
 				array_points += ','
@@ -68,7 +86,7 @@ def ReadCurveControls():
 #				console_write ("# " + obj.name)
 #				console_write(ReadSingleCurve(obj))
 
-def write_curve(context, filepath):
+def write_curve(context, filepath, apply_transform=False):
 	print("running write_some_data...")
 	f = open(filepath, 'w', encoding='utf-8')
 	f.write(ReadCurveControls())
@@ -90,6 +108,12 @@ class ExportGodotCurve3D(Operator, ExportHelper):
 			maxlen=255,	
 			)
 
+	apply_transform: BoolProperty(
+        name="Apply Object Transform",
+        description="Bake location, rotation, and scale into the exported curve data",
+        default=True,
+    )
+
 	def invoke(self, context, event):
 		obj = context.active_object
 		if obj:
@@ -110,7 +134,7 @@ class ExportGodotCurve3D(Operator, ExportHelper):
 		if result is None:
 			self.report({'ERROR'}, "Only Bezier curves are supported (no NURBS or Poly)")
 			return {'CANCELLED'}
-		return write_curve(context, self.filepath)
+		return write_curve(context, self.filepath, self.apply_transform)
 
 
 def menu_func_export(self, context):
