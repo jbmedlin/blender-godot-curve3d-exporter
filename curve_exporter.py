@@ -1,4 +1,5 @@
 import bpy	
+import os
 from bpy import context
 import builtins as __builtin__
 from bpy_extras.io_utils import ExportHelper
@@ -92,6 +93,17 @@ class ExportGodotCurve3D(Operator, ExportHelper):
 			options={'HIDDEN'},
 			maxlen=255,	
 			)
+
+	def invoke(self, context, event):
+		obj = context.active_object
+		if obj:
+			directory = bpy.path.abspath("//")
+			if self.filepath:
+				directory = os.path.dirname(self.filepath)
+
+			filename = bpy.path.ensure_ext(obj.name, self.filename_ext)
+			self.filepath = os.path.join(directory, filename)
+		return super().invoke(context, event)
 
 	def execute(self, context):
 		obj = context.active_object
