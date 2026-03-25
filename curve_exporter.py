@@ -29,26 +29,24 @@ def ReadSingleCurve(obj, apply_transform=False):
 	is_cyclic = spline.use_cyclic_u
 
 	if apply_transform:
-		temp_obj = obj.copy()
-		temp_obj.data = obj.data.copy()
-		bpy.context.collection.link(temp_obj)
+		curve_data = obj.data.copy()
+		baked_spline = curve_data.splines[0]
 
-		temp_obj.select_set(True)
-		bpy.context.view_layer.objects.active = temp_obj
-		bpy.obs.object.transform_apply(location=True, rotation=True, scale=True)
-		temp_obj.select_set(False)
+		mat = obj.matrix_world
+		for p in baked_spline.bezier_points:
+			p.co = mat @ p.co
+			p.handle_left = mat @ p.handle_left
+			p.handle_right = mat @ p.handle_right
 
-		use_obj = temp_obj
+		use_spline = baked_spline
 	else:
-		use_obj = obj
+		use_spline = spline
 
 	array_points = '"points": PackedVector3Array('
 	tilt_points = '"tilts": PackedFloat32Array('
 	count = 0
 
-	spline = use_obj.data.splines[0]
-
-	for point in spline.bezier_points:
+	for point in use_spline.bezier_points:
 		if count != 0:
 				array_points += ','
 				tilt_points += ','
@@ -87,9 +85,9 @@ def ReadCurveControls():
 #				console_write(ReadSingleCurve(obj))
 
 def write_curve(context, filepath, apply_transform=False):
-	print("running write_some_data...")
+	print("running write_curve...")
 	f = open(filepath, 'w', encoding='utf-8')
-	f.write(ReadCurveControls())
+	f.write(ReadSingleCurve(bpy.context.active_object, apply_transform))
 	f.close()
 
 	return {'FINISHED'}
