@@ -9,7 +9,7 @@ from bpy.types import Operator
 bl_info = {
     "name": "Godot Curve3D Exporter",
     "author": "jbmedlin",
-    "version": (1, 1, 0),
+    "version": (1, 2, 0),
     "blender": (4, 1, 0),
     "location": "File > Export > Export Curve3D (.tres)",
     "description": "Export Bezier curves to Godot 4 Curve3D (.tres) format",
@@ -18,18 +18,37 @@ bl_info = {
     "category": "Import-Export",
 }
 
-def ReadSingleCurve(obj, apply_transform=False):
+def ReadSingleCurve(obj, apply_transform=False, apply_modifiers=False):
 	if not obj.data.splines:
 		return None
 
-	spline = obj.data.splines[0]
+	if apply_modifiers:
+		temp_obj = obj.copy()
+		temp_obj.data = obj.data.copy()
+		bpy.context.collection.objects.link(temp_obj)
+
+		for modifier in list(temp_obj.modifiers):
+			try:
+				with bpy.context.temp_override(object=temp_obj):
+					bpy.ops.object.modifier_apply(modifier=modifier.name)
+			except Exception as e:
+				print(f"Warning: Could not apply modifier '{modifier.name}' on '{temp_obj.name}': {e}")
+
+		spline = temp_obj.data.splines[0]
+		temp_obj_for_cleanup = temp_obj
+	else:
+		spline = obj.data.splines[0]
+		temp_obj_for_cleanup = None
 
 	if spline.type != 'BEZIER':
+		if temp_obj_for_cleanup:
+			bpy.data.objects.remove(temp_obj_for_cleanup, do_unlink=True)
 		return None
 	is_cyclic = spline.use_cyclic_u
 
 	if apply_transform:
-		curve_data = obj.data.copy()
+		curve_data = spline.id_data.copy()
+
 		baked_spline = curve_data.splines[0]
 
 		mat = obj.matrix_world
@@ -76,6 +95,10 @@ def ReadSingleCurve(obj, apply_transform=False):
 	final_output += tilt_points + '\n'
 	final_output += '}\n'
 	final_output += "point_count = " + str(count)
+
+	if temp_obj_for_cleanup:
+		bpy.data.objects.remove(temp_obj_for_cleanup, do_unlink=True)
+
 	return final_output
 
 def ReadCurveControls():
@@ -84,10 +107,10 @@ def ReadCurveControls():
 #				console_write ("# " + obj.name)
 #				console_write(ReadSingleCurve(obj))
 
-def write_curve(context, filepath, apply_transform=False):
+def write_curve(context, filepath, apply_transform=False, apply_modifiers=False):
 	print("running write_curve...")
 	f = open(filepath, 'w', encoding='utf-8')
-	f.write(ReadSingleCurve(bpy.context.active_object, apply_transform))
+	f.write(ReadSingleCurve(bpy.context.active_object, apply_transform, apply_modifiers))
 	f.close()
 
 	return {'FINISHED'}
@@ -112,6 +135,12 @@ class ExportGodotCurve3D(Operator, ExportHelper):
         default=True,
     )
 
+	apply_modifiers: BoolProperty(
+        name="Apply Modifiers",
+        description="Apply all modifiers to the curve before exporting (non-destructive)",
+        default=False,
+    )
+
 	def invoke(self, context, event):
 		obj = context.active_object
 		if obj:
@@ -132,7 +161,7 @@ class ExportGodotCurve3D(Operator, ExportHelper):
 		if result is None:
 			self.report({'ERROR'}, "Only Bezier curves are supported (no NURBS or Poly)")
 			return {'CANCELLED'}
-		return write_curve(context, self.filepath, self.apply_transform)
+		return write_curve(context, self.filepath, self.apply_transform, self.apply_modifiers)
 
 
 def menu_func_export(self, context):
