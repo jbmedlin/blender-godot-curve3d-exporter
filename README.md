@@ -36,7 +36,6 @@ Done! The curve should appear correctly oriented in Godot.
 
 - Only **Bezier** curves are supported (no NURBS, no Poly)
 - Exports only the **first spline** of a curve object (multi-spline curves export only spline[0])
-- No scale/rotation/location baked in — the curve uses local object-space points (usually what you want for `Path3D`)
 - Tilt values are preserved (useful for banked roads, twisting ropes, etc.)
 
 Contributions welcome!

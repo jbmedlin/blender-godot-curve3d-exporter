@@ -9,7 +9,7 @@ from bpy.types import Operator
 bl_info = {
     "name": "Godot Curve3D Exporter",
     "author": "jbmedlin",
-    "version": (1, 0, 0),
+    "version": (1, 1, 0),
     "blender": (4, 1, 0),
     "location": "File > Export > Export Curve3D (.tres)",
     "description": "Export Bezier curves to Godot 4 Curve3D (.tres) format",
