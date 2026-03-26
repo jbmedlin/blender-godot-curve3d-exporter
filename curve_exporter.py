@@ -9,7 +9,7 @@ from bpy.types import Operator
 bl_info = {
     "name": "Godot Curve3D Exporter",
     "author": "jbmedlin",
-    "version": (1, 2, 0),
+    "version": (1, 2, 1),
     "blender": (4, 1, 0),
     "location": "File > Export > Export Curve3D (.tres)",
     "description": "Export Bezier curves to Godot 4 Curve3D (.tres) format",
@@ -73,13 +73,13 @@ def ReadSingleCurve(obj, apply_transform=False, apply_modifiers=False):
 		array_points += ( 
 				str(point.handle_left.x - point.co.x)+","+
 				str(point.handle_left.z - point.co.z)+","+
-				str(point.handle_left.y - point.co.y)+","+
+				str(-(point.handle_left.y - point.co.y))+","+
 				str(point.handle_right.x - point.co.x)+","+
 				str(point.handle_right.z - point.co.z)+","+
-				str(point.handle_right.y - point.co.y)+","+
+				str(-(point.handle_right.y - point.co.y))+","+
 				str(point.co.x)+","+
 				str(point.co.z)+","+
-				str(point.co.y)
+				str(-point.co.y)
 				)
 		tilt_points += str(point.tilt)
 	array_points += '),'
