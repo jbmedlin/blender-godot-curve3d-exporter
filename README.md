@@ -66,4 +66,4 @@ See [LICENSE](LICENSE) for full text.
 ---
 
 Made with :heart: for the Blender â†” Godot community  
-Questions / issues â†’ open an issue or ping [@zecona](https://x.com/zecona) on X
+Questions / issues ↔ open an issue or ping [@zecona](https://x.com/zecona) on X
