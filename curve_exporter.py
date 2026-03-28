@@ -8,7 +8,7 @@ from bpy.types import Operator
 bl_info = {
     "name": "Godot Curve3D Exporter",
     "author": "jbmedlin",
-    "version": (1, 3, 1),
+    "version": (1, 3, 2),
     "blender": (4, 1, 0),
     "location": "File > Export > Export Curve3D (.tres)",
     "description": "Export Bezier curves to Godot 4 Curve3D (.tres) format",
@@ -145,38 +145,28 @@ class ExportGodotCurve3D(Operator, ExportHelper):
 
 	batch_export: BoolProperty(
 		name = "Export All Selected Curves",		
-		description = "When enabled, exports every selected Curve object as its own .tres file. (named after the object)",
+		description = "When enabled, exports every selected Curve object as its own .tres file (named after the object) into the chosen folder",
 		default=False,
-	)
-
-	directory: StringProperty(
-		name = "Export Folder",
-		subtype='DIR_PATH',
-		default="",
 	)
 
 	def invoke(self, context, event):
 		obj = context.active_object
-		if self.batch_export:
-			self.filename_ext = ""
-			if not self.directory:
-				self.directory = bpy.path.abspath("//")
-			return super().invoke(context,event)
-		else:
-			if obj:
-				directory = bpy.path.abspath("//")
-				if self.filepath:
-					directory = os.path.dirname(self.filepath)
+		self.filename_ext = ".tres"
 
-				filename = bpy.path.ensure_ext(obj.name, self.filename_ext)
-				self.filepath = os.path.join(directory, filename)
-			return super().invoke(context, event)
+		if obj:
+			directory = bpy.path.abspath("//")
+			if self.filepath:
+				directory = os.path.dirname(self.filepath)
+
+			filename = bpy.path.ensure_ext(obj.name, self.filename_ext)
+			self.filepath = os.path.join(directory, filename)
+		return super().invoke(context, event)
 
 	def execute(self, context):
 		obj = context.active_object
 		if self.batch_export:
 			exported_count = 0
-			folder = bpy.path.abspath(self.directory)
+			folder = bpy.path.abspath(os.path.dirname(self.filepath)) if self.filepath else bpy.path.abspath("//")
 
 			for obj in context.selected_objects:
 				if obj.type != 'CURVE':
