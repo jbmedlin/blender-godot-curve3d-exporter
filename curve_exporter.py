@@ -202,7 +202,7 @@ class ExportGodotCurve3D(Operator, ExportHelper):
 			if not obj or obj.type != 'CURVE':
 				self.report({'ERROR'}, "Please select a Curve object.")
 				return {'CANCELLED'}
-			result = ReadSingleCurve(obj)
+			result = ReadSingleCurve(obj, self.apply_transform, self.apply_modifiers)
 			if result is None:
 				self.report({'ERROR'}, "Only Bezier curves are supported (no NURBS or Poly)")
 				return {'CANCELLED'}
