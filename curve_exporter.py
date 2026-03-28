@@ -1,7 +1,6 @@
 import bpy	
 import os
 from bpy import context
-import builtins as __builtin__
 from bpy_extras.io_utils import ExportHelper
 from bpy.props import StringProperty, BoolProperty, EnumProperty
 from bpy.types import Operator
