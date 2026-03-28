@@ -100,12 +100,6 @@ def ReadSingleCurve(obj, apply_transform=False, apply_modifiers=False):
 
 	return final_output
 
-def ReadCurveControls():
-	return ReadSingleCurve(bpy.context.active_object)
-#		for obj in bpy.context.selected_objects:
-#				console_write ("# " + obj.name)
-#				console_write(ReadSingleCurve(obj))
-
 def write_curve(context, filepath, apply_transform=False, apply_modifiers=False, obj=None):
 	print(f"writing curve to: {filepath}")
 	if obj is None:
