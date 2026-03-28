@@ -161,7 +161,7 @@ class ExportGodotCurve3D(Operator, ExportHelper):
 			self.filename_ext = ""
 			if not self.directory:
 				self.directory = bpy.path.abspath("//")
-			return super.invoke(context,event)
+			return super().invoke(context,event)
 		else:
 			if obj:
 				directory = bpy.path.abspath("//")
