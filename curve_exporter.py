@@ -205,5 +205,3 @@ def unregister():
 
 if __name__ == "__main__":
 		register()
-
-		bpy.ops.export_curve3d.some_data('INVOKE_DEFAULT')
