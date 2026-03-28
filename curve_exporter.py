@@ -205,7 +205,7 @@ class ExportGodotCurve3D(Operator, ExportHelper):
 			if result is None:
 				self.report({'ERROR'}, "Only Bezier curves are supported (no NURBS or Poly)")
 				return {'CANCELLED'}
-			return write_curve(context, self.filepath, self.apply_transform, self.apply_modifiers)
+			return write_curve(context, self.filepath, self.apply_transform, self.apply_modifiers, obj)
 
 
 def menu_func_export(self, context):
