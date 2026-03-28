@@ -9,7 +9,7 @@ from bpy.types import Operator
 bl_info = {
     "name": "Godot Curve3D Exporter",
     "author": "jbmedlin",
-    "version": (1, 2, 1),
+    "version": (1, 3, 1),
     "blender": (4, 1, 0),
     "location": "File > Export > Export Curve3D (.tres)",
     "description": "Export Bezier curves to Godot 4 Curve3D (.tres) format",
@@ -107,10 +107,13 @@ def ReadCurveControls():
 #				console_write ("# " + obj.name)
 #				console_write(ReadSingleCurve(obj))
 
-def write_curve(context, filepath, apply_transform=False, apply_modifiers=False):
-	print("running write_curve...")
+def write_curve(context, filepath, apply_transform=False, apply_modifiers=False, obj=None):
+	print(f"writing curve to: {filepath}")
+	if obj is None:
+		obj = bpy.context.active_object
+
 	f = open(filepath, 'w', encoding='utf-8')
-	f.write(ReadSingleCurve(bpy.context.active_object, apply_transform, apply_modifiers))
+	f.write(ReadSingleCurve(obj, apply_transform, apply_modifiers))
 	f.close()
 
 	return {'FINISHED'}
@@ -141,27 +144,69 @@ class ExportGodotCurve3D(Operator, ExportHelper):
         default=False,
     )
 
+	batch_export: BoolProperty(
+		name = "Export All Selected Curves",		
+		description = "When enabled, exports every selected Curve object as its own .tres file. (named after the object)",
+		default=False,
+	)
+
+	directory: StringProperty(
+		name = "Export Folder",
+		subtype='DIR_PATH',
+		default="",
+	)
+
 	def invoke(self, context, event):
 		obj = context.active_object
-		if obj:
-			directory = bpy.path.abspath("//")
-			if self.filepath:
-				directory = os.path.dirname(self.filepath)
+		if self.batch_export:
+			self.filename_ext = ""
+			if not self.directory:
+				self.directory = bpy.path.abspath("//")
+			return super.invoke(context,event)
+		else:
+			if obj:
+				directory = bpy.path.abspath("//")
+				if self.filepath:
+					directory = os.path.dirname(self.filepath)
 
-			filename = bpy.path.ensure_ext(obj.name, self.filename_ext)
-			self.filepath = os.path.join(directory, filename)
-		return super().invoke(context, event)
+				filename = bpy.path.ensure_ext(obj.name, self.filename_ext)
+				self.filepath = os.path.join(directory, filename)
+			return super().invoke(context, event)
 
 	def execute(self, context):
 		obj = context.active_object
-		if not obj or obj.type != 'CURVE':
-			self.report({'ERROR'}, "Please select a Curve object.")
-			return {'CANCELLED'}
-		result = ReadSingleCurve(obj)
-		if result is None:
-			self.report({'ERROR'}, "Only Bezier curves are supported (no NURBS or Poly)")
-			return {'CANCELLED'}
-		return write_curve(context, self.filepath, self.apply_transform, self.apply_modifiers)
+		if self.batch_export:
+			exported_count = 0
+			folder = bpy.path.abspath(self.directory)
+
+			for obj in context.selected_objects:
+				if obj.type != 'CURVE':
+					continue
+
+				result = ReadSingleCurve(obj, self.apply_transform, self.apply_modifiers)
+				if result is None:
+					self.report({'WARNING'}, f"Skipped {obj.name} (not a Bezier curve)")
+					continue
+
+				filepath = os.path.join(folder, bpy.path.ensure_ext(obj.name, self.filename_ext))
+				write_curve(context, filepath, self.apply_transform, self.apply_modifiers, obj)
+				exported_count += 1
+
+			if exported_count > 0:
+				self.report({'INFO'},f"Exported {exported_count} curve(s) to {folder}")
+				return ({'FINISHED'})
+			else:
+				self.report({'WARNING'}, "No valid Curve objects selected")
+				return {'CANCELLED'}
+		else:
+			if not obj or obj.type != 'CURVE':
+				self.report({'ERROR'}, "Please select a Curve object.")
+				return {'CANCELLED'}
+			result = ReadSingleCurve(obj)
+			if result is None:
+				self.report({'ERROR'}, "Only Bezier curves are supported (no NURBS or Poly)")
+				return {'CANCELLED'}
+			return write_curve(context, self.filepath, self.apply_transform, self.apply_modifiers)
 
 
 def menu_func_export(self, context):
