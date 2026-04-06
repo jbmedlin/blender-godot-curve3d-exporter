@@ -8,7 +8,7 @@ from bpy.types import Operator
 bl_info = {
     "name": "Godot Curve3D Exporter",
     "author": "jbmedlin",
-    "version": (1, 3, 2),
+    "version": (1, 3, 3),
     "blender": (4, 1, 0),
     "location": "File > Export > Export Curve3D (.tres)",
     "description": "Export Bezier curves to Godot 4 Curve3D (.tres) format",
@@ -45,20 +45,9 @@ def ReadSingleCurve(obj, apply_transform=False, apply_modifiers=False):
 		return None
 	is_cyclic = spline.use_cyclic_u
 
-	if apply_transform:
-		curve_data = spline.id_data.copy()
+	use_spline = spline
 
-		baked_spline = curve_data.splines[0]
-
-		mat = obj.matrix_world
-		for p in baked_spline.bezier_points:
-			p.co = mat @ p.co
-			p.handle_left = mat @ p.handle_left
-			p.handle_right = mat @ p.handle_right
-
-		use_spline = baked_spline
-	else:
-		use_spline = spline
+	mat = obj.matrix_world if apply_transform else None
 
 	array_points = '"points": PackedVector3Array('
 	tilt_points = '"tilts": PackedFloat32Array('
@@ -69,16 +58,26 @@ def ReadSingleCurve(obj, apply_transform=False, apply_modifiers=False):
 				array_points += ','
 				tilt_points += ','
 		count+=1
+
+		if apply_transform:
+			co = mat @ point.co
+			hl = mat @ point.handle_left
+			hr = mat @ point.handle_right
+		else:
+			co = point.co
+			hl = point.handle_left
+			hr = point.handle_right
+
 		array_points += ( 
-				str(point.handle_left.x - point.co.x)+","+
-				str(point.handle_left.z - point.co.z)+","+
-				str(-(point.handle_left.y - point.co.y))+","+
-				str(point.handle_right.x - point.co.x)+","+
-				str(point.handle_right.z - point.co.z)+","+
-				str(-(point.handle_right.y - point.co.y))+","+
-				str(point.co.x)+","+
-				str(point.co.z)+","+
-				str(-point.co.y)
+				str(hl.x - co.x)+","+
+				str(hl.z - co.z)+","+
+				str(-(hl.y - co.y))+","+
+				str(hr.x - co.x)+","+
+				str(hr.z - co.z)+","+
+				str(-(hr.y - co.y))+","+
+				str(co.x)+","+
+				str(co.z)+","+
+				str(-co.y)
 				)
 		tilt_points += str(point.tilt)
 	array_points += '),'
